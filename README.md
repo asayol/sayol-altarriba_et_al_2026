@@ -1,4 +1,4 @@
-**Eepository for the code and figures generated in the article by Sayol-Altarriba et al 2025**
+**Repository for the code and figures generated in the article by Sayol-Altarriba et al 2025**
 
 Title of the publication: AFEGIR
 
