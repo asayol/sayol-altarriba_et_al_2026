@@ -1,4 +1,5 @@
-#Repository for the code and figures generated in the article by Sayol-Altarriba et al 2025
+**Eepository for the code and figures generated in the article by Sayol-Altarriba et al 2025**
+
 Title of the publication: AFEGIR
 
 Code for reproducing the statistical analysis and figures. The code within the R markdown file (NOOOOOOOM.Rmd) is organised in the following order:
