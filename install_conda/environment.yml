@@ -1,0 +1,75 @@
+name: ir-analysis
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - r-base=4.3
+  - r-essentials
+  - r-ggplot2
+  - r-dplyr
+  - r-tidyr
+  - r-tidyverse
+  - r-tibble
+  - r-factominer
+  - r-factoextra
+  - r-readr
+  - r-devtools   # needed for GitHub installs
+  - r-prospectr
+  - r-remotes
+  - r-tidyselect
+  - r-rlang
+  - r-magrittr
+  - r-scales
+  - r-ggrepel
+  - r-pheatmap
+  - r-gridextra
+  - r-stringr
+  - r-purrr
+  - r-lifecycle
+  - r-glue
+  - r-pillar
+  - r-vctrs
+  - r-withr
+  - r-cli
+  - r-fansi
+  - r-colorspace
+  - r-labeling
+  - r-mass
+  - r-matrix
+  - r-r6
+  - r-tzdb
+  - r-gtable
+  - r-farver
+  - r-pkgconfig
+  - r-munsell
+  - r-utf8
+  - r-digest
+  - r-crayon
+  - r-isoband
+  - r-rcpp
+  - r-ellipsis
+  - r-lattice
+  - r-nlme
+  - r-mgcv
+  - r-survival
+  - r-matrixstats
+  - r-kernsmooth
+  - r-class
+  - r-cluster
+  - r-spatial
+  - r-nnet
+  - r-mass
+
+  # System utilities (optional but useful)
+  - git
+  - make
+  - gcc
+  - gxx
+  - pkg-config
+  - libxml2
+  - libcurl
+  - openssl
+  - pandoc
+
+  # After environment creation, install GitHub-only packages with R
+  # e.g. opusreader2
