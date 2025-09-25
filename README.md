@@ -1,6 +1,6 @@
 # Repository for the code and figures generated in the article by Sayol-Altarriba et al 2025
 
-**Title of the publication:** AFEGIR
+**Title of the publication:** Metabolomic assessment of gut microbiota samples by Fourier-transform infrared spectroscopy 
 
 Code for reproducing the statistical analysis and figures. The code within the R markdown file (Code_analysis_FTIR.Rmd) is organised in the following order:
 
