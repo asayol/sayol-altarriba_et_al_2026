@@ -2,7 +2,7 @@
 
 **Title of the publication:** AFEGIR
 
-Code for reproducing the statistical analysis and figures. The code within the R markdown file (NOOOOOOOM.Rmd) is organised in the following order:
+Code for reproducing the statistical analysis and figures. The code within the R markdown file (Code_analysis_FTIR.Rmd) is organised in the following order:
 
 ACTUALITZAAAAAAAR !!!!!!
 
