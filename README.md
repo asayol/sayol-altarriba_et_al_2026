@@ -1,4 +1,4 @@
-# Repository for the code and figures generated in the article by Sayol-Altarriba et al 2025
+# Repository for the code and figures generated in the article by Sayol-Altarriba et al 2026
 
 **Title of the publication:** Metabolomic assessment of gut microbiota samples by Fourier-transform infrared spectroscopy 
 
