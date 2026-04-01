@@ -21,6 +21,9 @@ library(tidyverse)
 library(tibble)
 library(FactoMineR) #PCA analysis 
 library(factoextra) #Plot PCA results
+library(pROC)
+library(MASS) #LDA
+library(caret) #Classification and Regression Training
 
 base_dir="/playground/FTIR_R_analysis"
 setwd(base_dir)
@@ -40,7 +43,7 @@ scfa_hd <- read_csv("SCFA_normalised_HD.csv", col_names = TRUE, col_types = NULL
 sample_id_hd <- scfa_hd$sample_id
 
 #Load FTIR data
-spc_list_healthy <- read_opus(dsn = "~/Library/CloudStorage/OneDrive-UniversitatdeBarcelona/PhD_A.Sayol/2024.IR_Biotyper/FTIR_R_analysis/OPUS_spectra_FTIR/Healthy_donors_IR/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
+spc_list_healthy <- read_opus(dsn = "~/FTIR_R_analysis/OPUS_spectra_FTIR/Healthy_donors_IR/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
 
 #We create an element for the wavenumbers (we could have used any sample as the x axis is the same for all the samples)
 x_wave_list <- spc_list_healthy[["CLA33F(D_1)_D2.0"]][["ab"]][["wavenumbers"]]
@@ -203,7 +206,7 @@ scfa_cdiff <- read_csv("SCFA_normalised_CDIFF.csv", col_names = TRUE, col_types 
 sample_id_cdiff <- scfa_cdiff$sample_id
 
 #Load FTIR data
-spc_list_cdiff <- read_opus(dsn = "~/Library/CloudStorage/OneDrive-UniversitatdeBarcelona/PhD_A.Sayol/2024.IR_Biotyper/FTIR_R_analysis/OPUS_spectra_FTIR/Cdifficile_IR/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
+spc_list_cdiff <- read_opus(dsn = "~/FTIR_R_analysis/OPUS_spectra_FTIR/Cdifficile_IR/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
 ```
 
 ### Spectra processing
@@ -1525,7 +1528,7 @@ pca_sgk_neg_reg
 
 ```{r}
 #Load FTIR data
-spc_list_mix <- read_opus(dsn = "~/Library/CloudStorage/OneDrive-UniversitatdeBarcelona/PhD_A.Sayol/2024.IR_Biotyper/FTIR_R_analysis/OPUS_spectra_FTIR/Sample_mix/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
+spc_list_mix <- read_opus(dsn = "~/FTIR_R_analysis/OPUS_spectra_FTIR/Sample_mix/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
 
 #SPECTRA LIST --> Sample mix
 ir_names_mix <- names(spc_list_mix)
@@ -1627,7 +1630,7 @@ pca_mix_sgk
 
 ```{r}
 #Load FTIR DATA
-spc_list_water <- read_opus(dsn = "~/Library/CloudStorage/OneDrive-UniversitatdeBarcelona/PhD_A.Sayol/2024.IR_Biotyper/FTIR_R_analysis/OPUS_spectra_FTIR/Acidified_water/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
+spc_list_water <- read_opus(dsn = "~/FTIR_R_analysis/OPUS_spectra_FTIR/Acidified_water/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
 
 #SPECTRA LIST --> Acidified water
 ir_names_water <- names(spc_list_water)
