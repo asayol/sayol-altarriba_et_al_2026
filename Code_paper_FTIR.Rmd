@@ -21,11 +21,9 @@ library(tidyverse)
 library(tibble)
 library(FactoMineR) #PCA analysis 
 library(factoextra) #Plot PCA results
-library(pROC)
-library(MASS) #LDA
-library(caret) #Classification and Regression Training
 
-setwd("~/Library/CloudStorage/OneDrive-UniversitatdeBarcelona/PhD_A.Sayol/2024.IR_Biotyper/FTIR_R_analysis/Scripts_paper_FTIR/")
+base_dir="/playground/FTIR_R_analysis"
+setwd(base_dir)
 ```
 
 ## HEALTHY DONORS
