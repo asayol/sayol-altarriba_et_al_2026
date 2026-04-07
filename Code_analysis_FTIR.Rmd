@@ -11,6 +11,15 @@ knitr::opts_chunk$set(echo = TRUE)
 # FTIR PROCESSING - STATISTICAL ANALYSIS AND PLOTS
 
 ```{r}
+library(parallel)
+
+# Detect cores but reserve 2 for the system
+n_cores <- max(1, detectCores() / 2) # Adjust the number of cores to use (e.g., use half of the available cores)
+Sys.setenv(OMP_NUM_THREADS = n_cores)
+Sys.setenv(MKL_NUM_THREADS = n_cores)
+Sys.setenv(OPENBLAS_NUM_THREADS = n_cores)
+Sys.setenv(VECLIB_MAXIMUM_THREADS = n_cores)
+
 library(readr)
 library(opusreader2) #Open OPUS files
 library(prospectr) #IR spectrum processing
@@ -24,9 +33,11 @@ library(factoextra) #Plot PCA results
 library(pROC)
 library(MASS) #LDA
 library(caret) #Classification and Regression Training
+library(pROC)
 
-base_dir="/playground/FTIR_R_analysis"
+base_dir="/playground/test_sayol/sayol-altarriba_et_al_2026"
 setwd(base_dir)
+
 ```
 
 ## HEALTHY DONORS
@@ -43,7 +54,7 @@ scfa_hd <- read_csv("SCFA_normalised_HD.csv", col_names = TRUE, col_types = NULL
 sample_id_hd <- scfa_hd$sample_id
 
 #Load FTIR data
-spc_list_healthy <- read_opus(dsn = "~/FTIR_R_analysis/OPUS_spectra_FTIR/Healthy_donors_IR/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
+spc_list_healthy <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Healthy_donors_IR/"), data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
 
 #We create an element for the wavenumbers (we could have used any sample as the x axis is the same for all the samples)
 x_wave_list <- spc_list_healthy[["CLA33F(D_1)_D2.0"]][["ab"]][["wavenumbers"]]
@@ -62,9 +73,9 @@ for (i in seq_along(sample_id_hd)) { #Iterate over each sample to get their 5 re
   pattern <- paste0("^", gsub("\\(", "\\\\(", gsub("\\)", "\\\\)", sample_id_hd[i])))
   replicates <- ir_names_healthy[grep(pattern, ir_names_healthy)]
   if (length(replicates) != 0){
-      selected_matrices <- lapply(replicates, function(element) {
+      selected_matrices <- mclapply(replicates, function(element) {
       return(t(spc_list_healthy[[element]]$ab$data))
-  })
+  }, mc.cores = n_cores)
   df_with_all_replicates <- as.data.frame(do.call(cbind, selected_matrices))
   df_for_each_sample <- data.frame(row.names = sample_id_hd[i],t((average_spec = rowMeans(df_with_all_replicates))))
   ir_healthy <- rbind(ir_healthy, df_for_each_sample)
@@ -113,11 +124,11 @@ w = 9 (window size, must be odd)
 #A) STANDARD NORMAL VARIATE --> With average data (the spectra shape does not change, but changes to enter numbers, making it easier to understand)
 ir_healthy_snv <- data.frame()
 for (i in 1:nrow(ir_healthy)){
-  print(i)
+  #print(i)
   ir_healthy_snv <- rbind(ir_healthy_snv,data.frame(standardNormalVariate(ir_healthy[i,])))
 }
 rownames(ir_healthy_snv) <- rownames(ir_healthy)
-ir_healthy_snv
+head(ir_healthy_snv)
 
 #Data sorting (STANDARD NORMAL VARIATE DATA)
 snv_data_hd <- ir_healthy_snv %>% 
@@ -206,7 +217,7 @@ scfa_cdiff <- read_csv("SCFA_normalised_CDIFF.csv", col_names = TRUE, col_types 
 sample_id_cdiff <- scfa_cdiff$sample_id
 
 #Load FTIR data
-spc_list_cdiff <- read_opus(dsn = "~/FTIR_R_analysis/OPUS_spectra_FTIR/Cdifficile_IR/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
+spc_list_cdiff <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Cdifficile_IR/"), data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
 ```
 
 ### Spectra processing
@@ -221,9 +232,9 @@ ir_cdiff <- data.frame()
 for (i in seq_along(sample_id_cdiff)) { # iterate over each sample to get their 5 replicates
   replicates <- ir_names_cdiff[grep(sample_id_cdiff[i], ir_names_cdiff)]
   if (length(replicates) != 0){
-      selected_matrices <- lapply(replicates, function(element) {
+      selected_matrices <- mclapply(replicates, function(element) {
       return(t(spc_list_cdiff[[element]]$ab$data))
-  })
+  }, mc.cores = n_cores)
   df_with_all_replicates <- as.data.frame(do.call(cbind, selected_matrices))
   df_for_each_sample <- data.frame(row.names = sample_id_cdiff[i],t((average_spec = rowMeans(df_with_all_replicates))))
   ir_cdiff <- rbind(ir_cdiff, df_for_each_sample)
@@ -252,11 +263,11 @@ Processing:
 #A) STANDARD NORMAL VARIATE --> With average data (the spectra form does not change, but changes to enter numbers, making it easier to understand)
 ir_cdiff_snv <- data.frame()
 for (i in 1:nrow(ir_cdiff)){
-  print(i)
+  #print(i)
   ir_cdiff_snv <- rbind(ir_cdiff_snv,data.frame(standardNormalVariate(ir_cdiff[i,])))
 }
 rownames(ir_cdiff_snv) <- rownames(ir_cdiff)
-ir_cdiff_snv
+head(ir_cdiff_snv)
 
 #Data sorting (STANDARD NORMAL VARIATE DATA)
 snv_data_cdiff <- ir_cdiff_snv %>% 
@@ -492,10 +503,10 @@ pca_skg_regions <- PCA(ir_filtered, ncp = 5, scale.unit = TRUE, quali.sup = 1)
 summary(pca_skg_regions)  #Summary of PCA
 
 #Eigenvalues --> a matrix containing all the eigenvalues, the percentage of variance and the cumulative percentage of variance
-pca_skg_regions$eig       
+head(pca_skg_regions$eig)       
 
 #Coordinates (loadings) --> a list of matrices containing all the results for the active variables (coordinates, correlation between variables and axes, square cosine, contributions)
-pca_skg_regions$var$coord 
+head(pca_skg_regions$var$coord)
 
 #Individual scores --> a list of matrices containing all the results for the active individuals (coordinates, square cosine, contributions)
 comp_ind <- pca_skg_regions$ind$coord 
@@ -778,6 +789,7 @@ decision_plot
 
 ```{r}
 #SCFA + FT-IR MAHALANOBIS DISTANCE SCORES
+scfa_total <- rbind(scfa_hd, scfa_cdiff)
 scfa_total <- scfa_total %>% remove_rownames %>% column_to_rownames(var='sample_id')
 
 mahal_scfa <- merge(mahal_df, scfa_total, by = "row.names", all = FALSE) #Join by sample id, in this case is the row name
@@ -1109,10 +1121,10 @@ pca_skg <- PCA(ir_skg_total, ncp = 5, scale = TRUE, quali.sup = 1)
 summary(pca_skg)  #Summary of PCA
 
 #Eigenvalues --> a matrix containing all the eigenvalues, the percentage of variance and the cumulative percentage of variance
-pca_skg$eig       
+head(pca_skg$eig)     
 
 #Coordinates (loadings) --> a list of matrices containing all the results for the active variables (coordinates, correlation between variables and axes, square cosine, contributions)
-pca_skg$var$coord 
+head(pca_skg$var$coord) 
 
 #Individual scores --> a list of matrices containing all the results for the active individuals (coordinates, square cosine, contributions)
 comp_ind <- pca_skg$ind$coord 
@@ -1186,10 +1198,10 @@ pca_acetate <- PCA(acetate_ftir, ncp = 5, scale = TRUE, quali.sup = 1)
 summary(pca_acetate)  #Summary of PCA
 
 #Eigenvalues --> a matrix containing all the eigenvalues, the percentage of variance and the cumulative percentage of variance
-pca_acetate$eig       
+head(pca_acetate$eig)       
 
 #Coordinates (loadings) --> a list of matrices containing all the results for the active variables (coordinates, correlation between variables and axes, square cosine, contributions)
-pca_acetate$var$coord 
+head(pca_acetate$var$coord) 
 
 #Individual scores --> a list of matrices containing all the results for the active individuals (coordinates, square cosine, contributions)
 comp_ind <- pca_acetate$ind$coord 
@@ -1289,10 +1301,10 @@ pca_propionate <- PCA(propionate_ftir, ncp = 5, scale = TRUE, quali.sup = 1)
 summary(pca_propionate)  #Summary of PCA
 
 #Eigenvalues --> a matrix containing all the eigenvalues, the percentage of variance and the cumulative percentage of variance
-pca_propionate$eig       
+head(pca_propionate$eig)       
 
 #Coordinates (loadings) --> a list of matrices containing all the results for the active variables (coordinates, correlation between variables and axes, square cosine, contributions)
-pca_propionate$var$coord 
+head(pca_propionate$var$coord) 
 
 #Individual scores --> a list of matrices containing all the results for the active individuals (coordinates, square cosine, contributions)
 comp_ind <- pca_propionate$ind$coord 
@@ -1393,10 +1405,10 @@ pca_butyrate <- PCA(butyrate_ftir, ncp = 5, scale = TRUE, quali.sup = 1)
 summary(pca_butyrate)  #Summary of PCA
 
 #Eigenvalues --> a matrix containing all the eigenvalues, the percentage of variance and the cumulative percentage of variance
-pca_butyrate$eig       
+head(pca_butyrate$eig)       
 
 #Coordinates (loadings) --> a list of matrices containing all the results for the active variables (coordinates, correlation between variables and axes, square cosine, contributions)
-pca_butyrate$var$coord 
+head(pca_butyrate$var$coord)
 
 #Individual scores --> a list of matrices containing all the results for the active individuals (coordinates, square cosine, contributions)
 comp_ind <- pca_butyrate$ind$coord 
@@ -1528,7 +1540,7 @@ pca_sgk_neg_reg
 
 ```{r}
 #Load FTIR data
-spc_list_mix <- read_opus(dsn = "~/FTIR_R_analysis/OPUS_spectra_FTIR/Sample_mix/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
+spc_list_mix <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Sample_mix/"), data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
 
 #SPECTRA LIST --> Sample mix
 ir_names_mix <- names(spc_list_mix)
@@ -1539,9 +1551,9 @@ for (i in seq_along(sample_id_mix)) { #Iterate over each sample to get their 5 r
   pattern <- paste0("^", gsub("\\(", "\\\\(", gsub("\\)", "\\\\)", sample_id_mix[i])))
   replicates <- ir_names_mix[grep(pattern, ir_names_mix)]
   if (length(replicates) != 0){
-      selected_matrices <- lapply(replicates, function(element) {
+      selected_matrices <- mclapply(replicates, function(element) {
       return(t(spc_list_mix[[element]]$ab$data))
-  })
+  }, mc.cores = n_cores)
   df_with_all_replicates <- as.data.frame(do.call(cbind, selected_matrices))
   df_for_each_sample <- data.frame(row.names = sample_id_mix[i],t((average_spec = rowMeans(df_with_all_replicates))))
   ir_mix <- rbind(ir_mix, df_for_each_sample)
@@ -1555,11 +1567,11 @@ colnames(ir_mix) <- gsub("^X", "", colnames(ir_mix))
 #STANDARD NORMAL VARIATE --> With average data (the spectra form does not change, but changes to enter numbers, making it easier to understand)
 ir_mix_snv <- data.frame()
 for (i in 1:nrow(ir_mix)){
-  print(i)
+  #print(i)
   ir_mix_snv <- rbind(ir_mix_snv,data.frame(standardNormalVariate(ir_mix[i,])))
 }
 rownames(ir_mix_snv) <- rownames(ir_mix)
-ir_mix_snv
+head(ir_mix_snv)
 
 #BASELINE CORRECTION --> Applied to SNV corrected data
 ir_mix_baseline <- data.frame()
@@ -1593,10 +1605,10 @@ pca_mix <- PCA(ir_mix_pca, ncp = 5, scale = TRUE, quali.sup = 1)
 summary(pca_mix)  #Summary of PCA
 
 #Eigenvalues --> a matrix containing all the eigenvalues, the percentage of variance and the cumulative percentage of variance
-pca_mix$eig       
+head(pca_mix$eig)       
 
 #Coordinates (loadings) --> a list of matrices containing all the results for the active variables (coordinates, correlation between variables and axes, square cosine, contributions)
-pca_mix$var$coord 
+head(pca_mix$var$coord)
 
 #Individual scores --> a list of matrices containing all the results for the active individuals (coordinates, square cosine, contributions)
 comp_ind <- pca_mix$ind$coord 
@@ -1630,7 +1642,7 @@ pca_mix_sgk
 
 ```{r}
 #Load FTIR DATA
-spc_list_water <- read_opus(dsn = "~/FTIR_R_analysis/OPUS_spectra_FTIR/Acidified_water/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
+spc_list_water <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Acidified_water/"), data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
 
 #SPECTRA LIST --> Acidified water
 ir_names_water <- names(spc_list_water)
@@ -1641,9 +1653,9 @@ for (i in seq_along(sample_id_water)) { #Iterate over each sample to get their 5
   pattern <- paste0("^", gsub("\\(", "\\\\(", gsub("\\)", "\\\\)", sample_id_water[i])))
   replicates <- ir_names_water[grep(pattern, ir_names_water)]
   if (length(replicates) != 0){
-      selected_matrices <- lapply(replicates, function(element) {
+      selected_matrices <- mclapply(replicates, function(element) {
       return(t(spc_list_water[[element]]$ab$data))
-  })
+  }, mc.cores = n_cores)
   df_with_all_replicates <- as.data.frame(do.call(cbind, selected_matrices))
   df_for_each_sample <- data.frame(row.names = sample_id_water[i],t((average_spec = rowMeans(df_with_all_replicates))))
   ir_water <- rbind(ir_water, df_for_each_sample)
@@ -1657,7 +1669,7 @@ colnames(ir_water) <- gsub("^X", "", colnames(ir_water))
 #STANDARD NORMAL VARIATE --> With average data (the spectra form does not change, but changes to enter numbers, making it easier to understand)
 ir_water_snv <- data.frame()
 for (i in 1:nrow(ir_water)){
-  print(i)
+  #print(i)
   ir_water_snv <- rbind(ir_water_snv,data.frame(standardNormalVariate(ir_water[i,])))
 }
 rownames(ir_water_snv) <- rownames(ir_water)
