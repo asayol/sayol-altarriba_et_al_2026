@@ -128,7 +128,7 @@ for (i in 1:nrow(ir_healthy)){
   ir_healthy_snv <- rbind(ir_healthy_snv,data.frame(standardNormalVariate(ir_healthy[i,])))
 }
 rownames(ir_healthy_snv) <- rownames(ir_healthy)
-head(ir_healthy_snv)
+summary(ir_healthy_snv)
 
 #Data sorting (STANDARD NORMAL VARIATE DATA)
 snv_data_hd <- ir_healthy_snv %>% 
@@ -267,7 +267,7 @@ for (i in 1:nrow(ir_cdiff)){
   ir_cdiff_snv <- rbind(ir_cdiff_snv,data.frame(standardNormalVariate(ir_cdiff[i,])))
 }
 rownames(ir_cdiff_snv) <- rownames(ir_cdiff)
-head(ir_cdiff_snv)
+summary(ir_cdiff_snv)
 
 #Data sorting (STANDARD NORMAL VARIATE DATA)
 snv_data_cdiff <- ir_cdiff_snv %>% 
@@ -503,10 +503,10 @@ pca_skg_regions <- PCA(ir_filtered, ncp = 5, scale.unit = TRUE, quali.sup = 1)
 summary(pca_skg_regions)  #Summary of PCA
 
 #Eigenvalues --> a matrix containing all the eigenvalues, the percentage of variance and the cumulative percentage of variance
-head(pca_skg_regions$eig)       
+summary(pca_skg_regions$eig)       
 
 #Coordinates (loadings) --> a list of matrices containing all the results for the active variables (coordinates, correlation between variables and axes, square cosine, contributions)
-head(pca_skg_regions$var$coord)
+summary(pca_skg_regions$var$coord)
 
 #Individual scores --> a list of matrices containing all the results for the active individuals (coordinates, square cosine, contributions)
 comp_ind <- pca_skg_regions$ind$coord 
@@ -1121,10 +1121,10 @@ pca_skg <- PCA(ir_skg_total, ncp = 5, scale = TRUE, quali.sup = 1)
 summary(pca_skg)  #Summary of PCA
 
 #Eigenvalues --> a matrix containing all the eigenvalues, the percentage of variance and the cumulative percentage of variance
-head(pca_skg$eig)     
+summary(pca_skg$eig)     
 
 #Coordinates (loadings) --> a list of matrices containing all the results for the active variables (coordinates, correlation between variables and axes, square cosine, contributions)
-head(pca_skg$var$coord) 
+summary(pca_skg$var$coord) 
 
 #Individual scores --> a list of matrices containing all the results for the active individuals (coordinates, square cosine, contributions)
 comp_ind <- pca_skg$ind$coord 
@@ -1198,10 +1198,10 @@ pca_acetate <- PCA(acetate_ftir, ncp = 5, scale = TRUE, quali.sup = 1)
 summary(pca_acetate)  #Summary of PCA
 
 #Eigenvalues --> a matrix containing all the eigenvalues, the percentage of variance and the cumulative percentage of variance
-head(pca_acetate$eig)       
+summary(pca_acetate$eig)       
 
 #Coordinates (loadings) --> a list of matrices containing all the results for the active variables (coordinates, correlation between variables and axes, square cosine, contributions)
-head(pca_acetate$var$coord) 
+summary(pca_acetate$var$coord) 
 
 #Individual scores --> a list of matrices containing all the results for the active individuals (coordinates, square cosine, contributions)
 comp_ind <- pca_acetate$ind$coord 
@@ -1301,10 +1301,10 @@ pca_propionate <- PCA(propionate_ftir, ncp = 5, scale = TRUE, quali.sup = 1)
 summary(pca_propionate)  #Summary of PCA
 
 #Eigenvalues --> a matrix containing all the eigenvalues, the percentage of variance and the cumulative percentage of variance
-head(pca_propionate$eig)       
+summary(pca_propionate$eig)       
 
 #Coordinates (loadings) --> a list of matrices containing all the results for the active variables (coordinates, correlation between variables and axes, square cosine, contributions)
-head(pca_propionate$var$coord) 
+summary(pca_propionate$var$coord) 
 
 #Individual scores --> a list of matrices containing all the results for the active individuals (coordinates, square cosine, contributions)
 comp_ind <- pca_propionate$ind$coord 
@@ -1405,10 +1405,10 @@ pca_butyrate <- PCA(butyrate_ftir, ncp = 5, scale = TRUE, quali.sup = 1)
 summary(pca_butyrate)  #Summary of PCA
 
 #Eigenvalues --> a matrix containing all the eigenvalues, the percentage of variance and the cumulative percentage of variance
-head(pca_butyrate$eig)       
+summary(pca_butyrate$eig)       
 
 #Coordinates (loadings) --> a list of matrices containing all the results for the active variables (coordinates, correlation between variables and axes, square cosine, contributions)
-head(pca_butyrate$var$coord)
+summary(pca_butyrate$var$coord)
 
 #Individual scores --> a list of matrices containing all the results for the active individuals (coordinates, square cosine, contributions)
 comp_ind <- pca_butyrate$ind$coord 
@@ -1571,7 +1571,7 @@ for (i in 1:nrow(ir_mix)){
   ir_mix_snv <- rbind(ir_mix_snv,data.frame(standardNormalVariate(ir_mix[i,])))
 }
 rownames(ir_mix_snv) <- rownames(ir_mix)
-head(ir_mix_snv)
+summary(ir_mix_snv)
 
 #BASELINE CORRECTION --> Applied to SNV corrected data
 ir_mix_baseline <- data.frame()
@@ -1605,10 +1605,10 @@ pca_mix <- PCA(ir_mix_pca, ncp = 5, scale = TRUE, quali.sup = 1)
 summary(pca_mix)  #Summary of PCA
 
 #Eigenvalues --> a matrix containing all the eigenvalues, the percentage of variance and the cumulative percentage of variance
-head(pca_mix$eig)       
+summary(pca_mix$eig)       
 
 #Coordinates (loadings) --> a list of matrices containing all the results for the active variables (coordinates, correlation between variables and axes, square cosine, contributions)
-head(pca_mix$var$coord)
+summary(pca_mix$var$coord)
 
 #Individual scores --> a list of matrices containing all the results for the active individuals (coordinates, square cosine, contributions)
 comp_ind <- pca_mix$ind$coord 
