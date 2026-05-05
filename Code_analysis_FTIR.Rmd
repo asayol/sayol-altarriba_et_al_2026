@@ -39,7 +39,6 @@ library(ggpmisc) #Correlation plots
 base_dir="/playground/test_sayol/sayol-altarriba_et_al_2026"
 setwd(base_dir)
 
-```
 HEALTHY DONORS
 
 Data loading
@@ -54,8 +53,8 @@ scfa_hd <- read_csv("SCFA_normalised_HD.csv", col_names = TRUE, col_types = NULL
 sample_id_hd <- scfa_hd$sample_id
 
 #Load FTIR data
-#Load FTIR data
 spc_list_healthy <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Healthy_donors_IR/"), data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
+
 
 #We create an element for the wavenumbers (we could have used any sample as the x axis is the same for all the samples)
 x_wave_list <- spc_list_healthy[["CLA33F(D_1)_D2.0"]][["ab"]][["wavenumbers"]]
@@ -89,12 +88,12 @@ colnames(ir_healthy) <- gsub("^X", "", colnames(ir_healthy))
 raw_absorbance_hd <- ir_healthy %>% 
   rownames_to_column(var = "sample_id") %>%  #Row names to column
   pivot_longer(cols = -sample_id,            #Select all columns except "sample_id"
-               names_to = "wavelength",     #Name for the wavenumber column
+               names_to = "wavenumber",     #Name for the wavenumber column
                values_to = "absorbance")    #Name for the absorbance values
 
-#Remove the 'X' before the wavelength value 
-raw_absorbance_hd$wavelength <- gsub("X", "", raw_absorbance_hd$wavelength)  
-raw_absorbance_hd$wavelength <- as.numeric(raw_absorbance_hd$wavelength)
+#Remove the 'X' before the wavenumber value 
+raw_absorbance_hd$wavenumber <- gsub("X", "", raw_absorbance_hd$wavenumber)  
+raw_absorbance_hd$wavenumber <- as.numeric(raw_absorbance_hd$wavenumber)
 
 a) Standard normal variate (SNV)
 
@@ -108,7 +107,7 @@ Appplied to SNV corrected data
 
 c) Savitzky-Golay
 
-We apply the second derivative to the curve. A Savitzky–Golay filter is a digital filter that can be applied to a set of digital data points for the purpose of smoothing the data, that is, to increase the precision of the data without distorting the digital tendency. The extremes of the dataframe are not included (the first and lasts wavelengths are omitted).
+We apply the second derivative to the curve. A Savitzky–Golay filter is a digital filter that can be applied to a set of digital data points for the purpose of smoothing the data, that is, to increase the precision of the data without distorting the digital tendency. The extremes of the dataframe are not included (the first and lasts wavenumbers are omitted).
 
 Parameters:
 
@@ -133,12 +132,12 @@ ir_healthy_snv
 snv_data_hd <- ir_healthy_snv %>% 
   rownames_to_column(var = "sample_id") %>%  #Row names to column
   pivot_longer(cols = -sample_id,            #Select all columns except "sample_id"
-               names_to = "wavelength",     #Name for the wavelength column
+               names_to = "wavenumber",     #Name for the wavenumber column
                values_to = "absorbance")    #Name for the absorbance values
 
-#Remove the 'X' before the wavelength value 
-snv_data_hd$wavelength <- gsub("X", "", snv_data_hd$wavelength)  
-snv_data_hd$wavelength <- as.numeric(snv_data_hd$wavelength)
+#Remove the 'X' before the wavenumber value 
+snv_data_hd$wavenumber <- gsub("X", "", snv_data_hd$wavenumber)  
+snv_data_hd$wavenumber <- as.numeric(snv_data_hd$wavenumber)
 
 #B) BASELINE CORRECTION --> Applied to SNV corrected data
 ir_healthy_bsln <- data.frame()
@@ -155,19 +154,19 @@ rownames(ir_healthy_bsln) <- rownames(ir_healthy)
 bsln_data_hd <- ir_healthy_bsln %>% 
   rownames_to_column(var = "sample_id") %>%  #Row names to column
   pivot_longer(cols = -sample_id,            #Select all columns except "sample_id"
-               names_to = "wavelength",     #Name for the wavelength column
+               names_to = "wavenumber",     #Name for the wavenumber column
                values_to = "absorbance")    #Name for the absorbance values
 
-#Remove the 'X' before the wavelength value 
-bsln_data_hd$wavelength <- gsub("X", "", bsln_data_hd$wavelength)  
-bsln_data_hd$wavelength <- as.numeric(bsln_data_hd$wavelength)
+#Remove the 'X' before the wavenumber value 
+bsln_data_hd$wavenumber <- gsub("X", "", bsln_data_hd$wavenumber)  
+bsln_data_hd$wavenumber <- as.numeric(bsln_data_hd$wavenumber)
 
 #SNV + baseline correction plot (per sample) --> Check data visualization
-blsn_hd_plot <- ggplot(bsln_data_hd, aes(x = wavelength, y = absorbance, color = sample_id)) + 
+blsn_hd_plot <- ggplot(bsln_data_hd, aes(x = wavenumber, y = absorbance, color = sample_id)) + 
   geom_line(linewidth = 0.1) + 
   geom_hline(yintercept=0.0, linetype="dashed",color = "red", linewidth = 0.2) +
   labs(x = expression("Wavenumber (cm"^-1*")"), y = "Absorbance (a.u.)", title = "SNV + baseline corrected spectra - Healthy donors") + 
-  scale_x_continuous(breaks = seq(min(bsln_data_hd$wavelength), max(bsln_data_hd$wavelength), by = 200), labels = seq(min(bsln_data_hd$wavelength), max(bsln_data_hd$wavelength), by = 200), expand = c(0, 0), trans = "reverse") +
+  scale_x_continuous(breaks = seq(min(bsln_data_hd$wavenumber), max(bsln_data_hd$wavenumber), by = 200), labels = seq(min(bsln_data_hd$wavenumber), max(bsln_data_hd$wavenumber), by = 200), expand = c(0, 0), trans = "reverse") +
   theme_minimal() +
   theme(text = element_text(size = 10),
         axis.title.y = element_text(vjust = +3, size = 12), 
@@ -194,12 +193,12 @@ colnames(ir_healthy_skg) <- gsub("^X", "", colnames(ir_healthy_skg))
 skg_data_hd <- ir_healthy_skg %>% 
   rownames_to_column(var = "sample_id") %>%  #Row names to column
   pivot_longer(cols = -sample_id,            #Select all columns except "sample_id"
-               names_to = "wavelength",     #Name for the wavelength column
+               names_to = "wavenumber",     #Name for the wavenumber column
                values_to = "absorbance")    #Name for the absorbance values
 
-#Remove the 'X' before the wavelength value 
-skg_data_hd$wavelength <- gsub("X", "", skg_data_hd$wavelength)  
-skg_data_hd$wavelength <- as.numeric(skg_data_hd$wavelength)
+#Remove the 'X' before the wavenumber value 
+skg_data_hd$wavenumber <- gsub("X", "", skg_data_hd$wavenumber)  
+skg_data_hd$wavenumber <- as.numeric(skg_data_hd$wavenumber)
 
 CDI PATIENTS
 
@@ -216,8 +215,6 @@ sample_id_cdiff <- scfa_cdiff$sample_id
 
 #Load FTIR data
 spc_list_cdiff <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Cdifficile_IR/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
-
-
 
 Spectra processing
 
@@ -247,12 +244,12 @@ colnames(ir_cdiff) <- gsub("^X", "", colnames(ir_cdiff))
 raw_absorbance_cdiff <- ir_cdiff %>% 
   rownames_to_column(var = "sample_id") %>%  #Row names to column
   pivot_longer(cols = -sample_id,            #Select all columns except "sample_id"
-               names_to = "wavelength",     #Name for the wavelength column
+               names_to = "wavenumber",     #Name for the wavenumber column
                values_to = "absorbance")    #Name for the absorbance values
 
-#Remove the 'X' before the wavelength value 
-raw_absorbance_cdiff$wavelength <- gsub("X", "", raw_absorbance_cdiff$wavelength)  
-raw_absorbance_cdiff$wavelength <- as.numeric(raw_absorbance_cdiff$wavelength)
+#Remove the 'X' before the wavenumber value 
+raw_absorbance_cdiff$wavenumber <- gsub("X", "", raw_absorbance_cdiff$wavenumber)  
+raw_absorbance_cdiff$wavenumber <- as.numeric(raw_absorbance_cdiff$wavenumber)
 
 Processing:
 
@@ -271,19 +268,19 @@ ir_cdiff_snv
 snv_data_cdiff <- ir_cdiff_snv %>% 
   rownames_to_column(var = "sample_id") %>%  #Row names to column
   pivot_longer(cols = -sample_id,            #Select all columns except "sample_id"
-               names_to = "wavelength",     #Name for the wavelength column
+               names_to = "wavenumber",     #Name for the wavenumber column
                values_to = "absorbance")    #Name for the absorbance values
 
-#Remove the 'X' before the wavelength value 
-snv_data_cdiff$wavelength <- gsub("X", "", snv_data_cdiff$wavelength)  
-snv_data_cdiff$wavelength <- as.numeric(snv_data_cdiff$wavelength)
+#Remove the 'X' before the wavenumber value 
+snv_data_cdiff$wavenumber <- gsub("X", "", snv_data_cdiff$wavenumber)  
+snv_data_cdiff$wavenumber <- as.numeric(snv_data_cdiff$wavenumber)
 
 #SNV plot (per sample) --> Check data visualization
-snv_cdiff_plot <- ggplot(snv_data_cdiff, aes(x = wavelength, y = absorbance, color = sample_id)) + 
+snv_cdiff_plot <- ggplot(snv_data_cdiff, aes(x = wavenumber, y = absorbance, color = sample_id)) + 
   geom_line(linewidth = 0.1) + 
   geom_hline(yintercept=0.0, linetype="dashed",color = "red", linewidth = 0.2) +
   labs(x = expression("Wavenumber (cm"^-1*")"), y = "Absorbance (a.u.)", title = "SNV corrected spectra - C.difficile patients") + 
-  scale_x_continuous(breaks = seq(min(snv_data_cdiff$wavelength), max(snv_data_cdiff$wavelength), by = 200), labels = seq(min(snv_data_cdiff$wavelength), max(snv_data_cdiff$wavelength), by = 200), expand = c(0, 0), trans = "reverse") +
+  scale_x_continuous(breaks = seq(min(snv_data_cdiff$wavenumber), max(snv_data_cdiff$wavenumber), by = 200), labels = seq(min(snv_data_cdiff$wavenumber), max(snv_data_cdiff$wavenumber), by = 200), expand = c(0, 0), trans = "reverse") +
   theme_minimal() +
   theme(text = element_text(size = 10),
         axis.title.y = element_text(vjust = +3, size = 12), 
@@ -317,19 +314,19 @@ scfa_cdiff <- scfa_cdiff[-19, ] # Remove outlier
 bsln_data_cdiff <- ir_cdiff_bsln %>% 
   rownames_to_column(var = "sample_id") %>%  #Row names to column
   pivot_longer(cols = -sample_id,            #Select all columns except "sample_id"
-               names_to = "wavelength",     #Name for the wavelength column
+               names_to = "wavenumber",     #Name for the wavenumber column
                values_to = "absorbance")    #Name for the absorbance values
 
-#Remove the 'X' before the wavelength value 
-bsln_data_cdiff$wavelength <- gsub("X", "", bsln_data_cdiff$wavelength)  
-bsln_data_cdiff$wavelength <- as.numeric(bsln_data_cdiff$wavelength)
+#Remove the 'X' before the wavenumber value 
+bsln_data_cdiff$wavenumber <- gsub("X", "", bsln_data_cdiff$wavenumber)  
+bsln_data_cdiff$wavenumber <- as.numeric(bsln_data_cdiff$wavenumber)
 
 #SNV + baseline correction plot (per sample) --> Check data visualization
-blsn_cdiff_plot <- ggplot(bsln_data_cdiff, aes(x = wavelength, y = absorbance, color = sample_id)) + 
+blsn_cdiff_plot <- ggplot(bsln_data_cdiff, aes(x = wavenumber, y = absorbance, color = sample_id)) + 
   geom_line(linewidth = 0.1) + 
   geom_hline(yintercept=0.0, linetype="dashed",color = "red", linewidth = 0.2) +
   labs(x = expression("Wavenumber (cm"^-1*")"), y = "Absorbance (a.u.)", title = "SNV + baseline corrected spectra - Healthy donors") + 
-  scale_x_continuous(breaks = seq(min(bsln_data_cdiff$wavelength), max(bsln_data_cdiff$wavelength), by = 200), labels = seq(min(bsln_data_cdiff$wavelength), max(bsln_data_cdiff$wavelength), by = 200), expand = c(0, 0), trans = "reverse") +
+  scale_x_continuous(breaks = seq(min(bsln_data_cdiff$wavenumber), max(bsln_data_cdiff$wavenumber), by = 200), labels = seq(min(bsln_data_cdiff$wavenumber), max(bsln_data_cdiff$wavenumber), by = 200), expand = c(0, 0), trans = "reverse") +
   theme_minimal() +
   theme(text = element_text(size = 10),
         axis.title.y = element_text(vjust = +3, size = 12), 
@@ -356,12 +353,12 @@ colnames(ir_cdiff_sgk) <- gsub("^X", "", colnames(ir_cdiff_sgk))
 skg_data_cdiff <- ir_cdiff_sgk %>% 
   rownames_to_column(var = "sample_id") %>%  #Row names to column
   pivot_longer(cols = -sample_id,            #Select all columns except "sample_id"
-               names_to = "wavelength",     #Name for the wavelength column
+               names_to = "wavenumber",     #Name for the wavenumber column
                values_to = "absorbance")    #Name for the absorbance values
 
-#Remove the 'X' before the wavelength value 
-skg_data_cdiff$wavelength <- gsub("X", "", skg_data_cdiff$wavelength)  
-skg_data_cdiff$wavelength <- as.numeric(skg_data_cdiff$wavelength)
+#Remove the 'X' before the wavenumber value 
+skg_data_cdiff$wavenumber <- gsub("X", "", skg_data_cdiff$wavenumber)  
+skg_data_cdiff$wavenumber <- as.numeric(skg_data_cdiff$wavenumber)
 
 ABSORBANCE PLOTS
 
@@ -379,14 +376,14 @@ corrected_ir_data <- rbind(bsln_data_hd, bsln_data_cdiff)
 
 #MERGE THE TWO DATAFRAMES 
 corrected_ir_avg <- corrected_ir_data %>%
-  group_by(patient_type, wavelength) %>%
+  group_by(patient_type, wavenumber) %>%
   summarize(absorbance_avg = mean(absorbance, na.rm = TRUE), .groups = "drop")
 
 Average healthy vs. CDI (Fig. 1B)
 
 {r}
 #TOTAL PLOT (SNV + baseline correction plot (average))
-plot_bonds <- ggplot(corrected_ir_avg, aes(x = wavelength, y = absorbance_avg, colour = patient_type)) + 
+plot_bonds <- ggplot(corrected_ir_avg, aes(x = wavenumber, y = absorbance_avg, colour = patient_type)) + 
   geom_line(linewidth = 0.8) + 
   scale_colour_manual(values = c("healthy_donor" = "skyblue4", "cdiff_patient" = "indianred4"), name = NULL, labels = c("Dysbiotic patients (n = 39)", "Healthy donors (n = 115)")) + 
   labs(x = expression("Wavenumber (cm"^-1*")"), y = "Absorbance (a.u.)") +
@@ -398,7 +395,7 @@ plot_bonds <- ggplot(corrected_ir_avg, aes(x = wavelength, y = absorbance_avg, c
   annotate("text", x = 1550, y = 3.5, label = paste0("C=O"), color = "darkgreen", size = 4, hjust = 0.5) + #C=O letters
   annotate("rect", xmin=1380, xmax=1210, ymin=0, ymax=Inf, alpha=0.15, fill="orange2") + #C-O region 
     annotate("text", x = 1300, y = 3.5, label = paste0("C-O"), color = "gold4", size = 4, hjust = 0.5) + #C=O letters
-  scale_x_continuous(breaks = seq(min(corrected_ir_data$wavelength), max(corrected_ir_data$wavelength), by = 200), labels = seq(min(corrected_ir_data$wavelength), max(corrected_ir_data$wavelength), by = 200), expand = c(0, 0), trans = "reverse") +
+  scale_x_continuous(breaks = seq(min(corrected_ir_data$wavenumber), max(corrected_ir_data$wavenumber), by = 200), labels = seq(min(corrected_ir_data$wavenumber), max(corrected_ir_data$wavenumber), by = 200), expand = c(0, 0), trans = "reverse") +
   scale_y_continuous(limits = c(0, 3.75), breaks = c(0, 1, 2, 3)) +
     theme_minimal() +
   theme(text = element_text(size = 9.5),
@@ -429,13 +426,13 @@ skg_total_avg <- rbind(skg_data_hd, skg_data_cdiff)
 
 #MERGE THE TWO DATAFRAMES 
 skg_total_avg <- skg_total_avg %>%
-  group_by(patient_type, wavelength) %>%
+  group_by(patient_type, wavenumber) %>%
   summarize(absorbance_avg = mean(absorbance, na.rm = TRUE), .groups = "drop")
 
-filtered_skg_average <- skg_total_avg %>% dplyr::filter(wavelength >= 500 & wavelength <= 3900)
+filtered_skg_average <- skg_total_avg %>% dplyr::filter(wavenumber >= 500 & wavenumber <= 3900)
 
 #TOTAL PLOT (SNV + baseline correction plot (per sample))
-skg_avg_plot <- ggplot(filtered_skg_average, aes(x = wavelength, y = absorbance_avg, color = patient_type)) + 
+skg_avg_plot <- ggplot(filtered_skg_average, aes(x = wavenumber, y = absorbance_avg, color = patient_type)) + 
   geom_line(linewidth = 0.4) + 
   scale_colour_manual(values = c("healthy_donor" = "skyblue4", "cdiff_patient" = "indianred4"), name = NULL, labels = c("Dysbiotic patients (n = 39)", "Healthy donors (n = 115)")) +   
   labs(x = expression("Wavenumber (cm"^-1*")"), y = "Second derivative values", title = "Savitzky-Golay - 2nd derivate") +
@@ -546,12 +543,15 @@ A PC with an eigenvalue > 1 indicates that the PC accounts for more variance tha
 eigenvalues <- pca_skg_regions$eig
 head(eigenvalues[, 1:2])
 
+pca_skg_regions$eig
+
 #Convert to a dataframe
 eigenvalues_df <- data.frame(principal_component = 1:nrow(eigenvalues),
-  variance_explained = eigenvalues[, 2])
+  eigenvalues = eigenvalues[, 1], 
+  per_variance_explained = eigenvalues[, 2])
 
 #Scree plot 
-scree_plot <- ggplot(eigenvalues_df, aes(x = principal_component, y = variance_explained)) +
+scree_plot <- ggplot(eigenvalues_df, aes(x = principal_component, y = per_variance_explained)) +
   geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) +
   geom_line(aes(group = 1), color = "red", size = 0.2) +
   geom_point(color = "red", size = 0.2) +
@@ -566,9 +566,9 @@ scree_plot
 #Scree plot of the fifty first PC
 #Filter eigenvalue > 1 indicates that the PC accounts for more variance than accounted by one of the original variables in standardized data. This is commonly used as a cutoff point to determine the number of PCs to retain.eigenvalues_df_50 <- eigenvalues_df %>%
 
-signif_eigenvalues <- eigenvalues_df[eigenvalues_df$variance_explained >= 1, ]
+signif_eigenvalues <- eigenvalues_df[eigenvalues_df$eigenvalues >= 1, ]
 
-scree_plot_signif <- ggplot(signif_eigenvalues, aes(x = principal_component, y = variance_explained)) +
+scree_plot_signif <- ggplot(signif_eigenvalues, aes(x = principal_component, y = per_variance_explained)) +
   geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) +
   geom_line(aes(group = 1), color = "red", size = 0.4) +
   geom_point(color = "red", size = 0.4) +
@@ -577,6 +577,8 @@ scree_plot_signif <- ggplot(signif_eigenvalues, aes(x = principal_component, y =
     x = "Principal Components",
     y = "Percentage of Variance Explained") +
   theme_minimal()
+
+scree_plot_signif
 
 Contribution of variables (Supp Fig. S3)
 
@@ -1570,8 +1572,6 @@ PCA mix samples (Supp. Fig. S5)
 #Load FTIR data
 spc_list_mix <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Sample_mix/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
 
-
-
 #SPECTRA LIST --> Sample mix
 ir_names_mix <- names(spc_list_mix)
 sample_id_mix <- c("CLA33F", "MPP28F", "RGV45F", "RTF49M", "CLA33F_MPP28F", "RGV45F_RTF49M")
@@ -1719,19 +1719,19 @@ rownames(ir_water_bsln) <- rownames(ir_water)
 bsln_data_water <- ir_water_bsln %>% 
   rownames_to_column(var = "sample_id") %>%  #Row names to column
   pivot_longer(cols = -sample_id,            #Select all columns except "sample_id"
-               names_to = "wavelength",     #Name for the wavelength column
+               names_to = "wavenumber",     #Name for the wavenumber column
                values_to = "absorbance")    #Name for the absorbance values
 
-#Remove the 'X' before the wavelength value 
-bsln_data_water$wavelength <- gsub("X", "", bsln_data_water$wavelength)  
-bsln_data_water$wavelength <- as.numeric(bsln_data_water$wavelength)
+#Remove the 'X' before the wavenumber value 
+bsln_data_water$wavenumber <- gsub("X", "", bsln_data_water$wavenumber)  
+bsln_data_water$wavenumber <- as.numeric(bsln_data_water$wavenumber)
 
 #PLOT (SNV + baseline correction plot acidified water)
-blsn_water_plot <- ggplot(bsln_data_water, aes(x = wavelength, y = absorbance)) + 
+blsn_water_plot <- ggplot(bsln_data_water, aes(x = wavenumber, y = absorbance)) + 
   geom_line(linewidth = 0.8, color = "lightblue") + 
   labs(x = expression("Wavenumber (cm"^-1*")"), y = "Absorbance (a.u.)") +
-  scale_x_continuous(breaks = seq(min(bsln_data_water$wavelength), max(bsln_data_water$wavelength), by = 200), 
-                     labels = seq(min(bsln_data_water$wavelength), max(bsln_data_water$wavelength), by = 200),
+  scale_x_continuous(breaks = seq(min(bsln_data_water$wavenumber), max(bsln_data_water$wavenumber), by = 200), 
+                     labels = seq(min(bsln_data_water$wavenumber), max(bsln_data_water$wavenumber), by = 200),
                      expand = c(0, 0), trans = "reverse") +
   theme_minimal() +
   theme(text = element_text(size = 9.5),
@@ -1745,3 +1745,4 @@ blsn_water_plot <- ggplot(bsln_data_water, aes(x = wavelength, y = absorbance)) 
 blsn_water_plot
 
 #ggsave("Figures_paper/SupFigS7.Spectra_water.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+
