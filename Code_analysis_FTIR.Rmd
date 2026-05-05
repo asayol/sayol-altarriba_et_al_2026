@@ -1518,9 +1518,9 @@ PCA - Non specific regions (Supp. Fig. S6)
 #Selected columns non-specific ()
 which(colnames(ir_skg_total) == "504") #To check the column of the variable
 
-ir_filtered_neg <- ir_skg_total %>% dplyr::select(1, 2:394, 1494:2294, 2594:2614, 2784:3490)
+ir_filtered_neg <- ir_skg_total %>% dplyr::select(1, 2:393, 1495:2293, 2595:2613, 2785:3490)
 
-#Non-specific regions --> (3992:3600, 2500:1700, 1400:1380, 1210:504)
+#Non-specific regions --> (3992:3601, 2499:1701, 1399:1381, 1209:504)
 
 #PCA
 #The variable 'patient_type' (column = 1) is removed before the PCA analysis
