@@ -391,7 +391,7 @@ plot_bonds <- ggplot(corrected_ir_avg, aes(x = wavelength, y = absorbance_avg, c
   scale_colour_manual(values = c("healthy_donor" = "skyblue4", "cdiff_patient" = "indianred4"), name = NULL, labels = c("Dysbiotic patients (n = 39)", "Healthy donors (n = 115)")) + 
   labs(x = expression("Wavenumber (cm"^-1*")"), y = "Absorbance (a.u.)") +
   annotate("rect", xmin=3600, xmax=2500, ymin=0, ymax=Inf, alpha=0.15, fill="red2") + #O-H region + 
-  annotate("text", x = 3400, y = 3.5, label = paste0("O-H"), color = "red4", size = 4, hjust = 0) + #O-H letters
+  annotate("text", x = 3400, y = 3.5, label = paste0("O-H"), color = "red4", size = 4, hjust = 0.5) + #O-H letters
   annotate("rect", xmin=3000, xmax=2800, ymin=0, ymax=Inf, alpha=0.15, fill="steelblue4") + #CH region
   annotate("text", x = 2900, y = 3.35, label = "atop(CH[2], CH[3])", parse = TRUE, color = "royalblue4", size = 4, hjust = 0.5) + #CH2/CH3 letters
   annotate("rect", xmin=1700, xmax=1400, ymin=0, ymax=Inf, alpha=0.15, fill="green4") + #C=O region 
