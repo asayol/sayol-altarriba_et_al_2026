@@ -10,11 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # FTIR PROCESSING - STATISTICAL ANALYSIS AND PLOTS
 
-```{r}
+```{r load-libraries}
 library(parallel)
 
 # Detect cores but reserve 2 for the system
 n_cores <- max(1, detectCores() / 2) # Adjust the number of cores to use (e.g., use half of the available cores)
+n_cores <-12
 Sys.setenv(OMP_NUM_THREADS = n_cores)
 Sys.setenv(MKL_NUM_THREADS = n_cores)
 Sys.setenv(OPENBLAS_NUM_THREADS = n_cores)
@@ -33,11 +34,11 @@ library(factoextra) #Plot PCA results
 library(pROC)
 library(MASS) #LDA
 library(caret) #Classification and Regression Training
-library(pROC)
 library(ggpmisc) #Correlation plots
 
-base_dir="/playground/test_sayol/sayol-altarriba_et_al_2026"
+base_dir="/playground/sayol-altarriba_et_al_2026"
 setwd(base_dir)
+```
 
 HEALTHY DONORS
 
@@ -45,7 +46,7 @@ Data loading
 
 SCFAs levels from healthy donors and IR data files (OPUS files; .0):
 
-{r}
+```{r load-hd-data}
 #SCFAs normalized levels - healthy donors:
 scfa_hd <- read_csv("SCFA_normalised_HD.csv", col_names = TRUE, col_types = NULL)
 
@@ -58,12 +59,13 @@ spc_list_healthy <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Healthy_
 
 #We create an element for the wavenumbers (we could have used any sample as the x axis is the same for all the samples)
 x_wave_list <- spc_list_healthy[["CLA33F(D_1)_D2.0"]][["ab"]][["wavenumbers"]]
+```
 
 Spectra processing
 
 Each sample has 5 replicates (except 2 of them, that have 4 replicates –> CGR32F D.5 and MGM31F D.2), so we calculate the mean spectrum of each sample, having a single averaged spectrum per sample.
 
-{r}
+```{r hd-spectra-processing}
 #SPECTRA LIST --> Healthy donors
 ir_names_healthy <- names(spc_list_healthy)
 
@@ -94,6 +96,7 @@ raw_absorbance_hd <- ir_healthy %>%
 #Remove the 'X' before the wavenumber value 
 raw_absorbance_hd$wavenumber <- gsub("X", "", raw_absorbance_hd$wavenumber)  
 raw_absorbance_hd$wavenumber <- as.numeric(raw_absorbance_hd$wavenumber)
+```
 
 a) Standard normal variate (SNV)
 
@@ -117,7 +120,7 @@ p = 3 (an integer indicating the polynomial order)
 
 w = 9 (window size, must be odd)
 
-{r}
+```{r hd-corrections}
 #SPECTRA PROCESSING 
 #A) STANDARD NORMAL VARIATE --> With average data (the spectra shape does not change, but changes to enter numbers, making it easier to understand)
 ir_healthy_snv <- data.frame()
@@ -199,6 +202,7 @@ skg_data_hd <- ir_healthy_skg %>%
 #Remove the 'X' before the wavenumber value 
 skg_data_hd$wavenumber <- gsub("X", "", skg_data_hd$wavenumber)  
 skg_data_hd$wavenumber <- as.numeric(skg_data_hd$wavenumber)
+```
 
 CDI PATIENTS
 
@@ -206,7 +210,7 @@ Data loading
 
 SCFAs levels from patients with Clostidioides difficile infection (CDI) and IR data files (OPUS files; .0):
 
-{r}
+```{r load-cdiff-data}
 #Raw data - C.difficile patients:
 scfa_cdiff <- read_csv("SCFA_normalised_CDIFF.csv", col_names = TRUE, col_types = NULL)
 
@@ -214,13 +218,14 @@ scfa_cdiff <- read_csv("SCFA_normalised_CDIFF.csv", col_names = TRUE, col_types 
 sample_id_cdiff <- scfa_cdiff$sample_id
 
 #Load FTIR data
-spc_list_cdiff <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Cdifficile_IR/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
+spc_list_cdiff <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Cdifficile_IR/"), data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
+```
 
 Spectra processing
 
 Each sample has 5 replicates, so we calculate the mean spectrum of each sample, having a single averaged spectrum per sample.
 
-{r}
+```{r cdiff-spectra-processing}
 #SPECTRA LIST --> C. difficile pateints
 ir_names_cdiff <- names(spc_list_cdiff)
 
@@ -250,10 +255,11 @@ raw_absorbance_cdiff <- ir_cdiff %>%
 #Remove the 'X' before the wavenumber value 
 raw_absorbance_cdiff$wavenumber <- gsub("X", "", raw_absorbance_cdiff$wavenumber)  
 raw_absorbance_cdiff$wavenumber <- as.numeric(raw_absorbance_cdiff$wavenumber)
+```
 
 Processing:
 
-{r}
+```{r cdiff-corrections}
 #SPECTRA PROCESSING
 #A) STANDARD NORMAL VARIATE --> With average data (the spectra form does not change, but changes to enter numbers, making it easier to understand)
 ir_cdiff_snv <- data.frame()
@@ -359,10 +365,11 @@ skg_data_cdiff <- ir_cdiff_sgk %>%
 #Remove the 'X' before the wavenumber value 
 skg_data_cdiff$wavenumber <- gsub("X", "", skg_data_cdiff$wavenumber)  
 skg_data_cdiff$wavenumber <- as.numeric(skg_data_cdiff$wavenumber)
+```
 
 ABSORBANCE PLOTS
 
-{r}
+```{r absorbance-plots}
 #HEALTHY DONORS
 #Add tag to indicate the patient type 
 bsln_data_hd <- bsln_data_hd %>% mutate(patient_type = "healthy_donor")
@@ -378,10 +385,11 @@ corrected_ir_data <- rbind(bsln_data_hd, bsln_data_cdiff)
 corrected_ir_avg <- corrected_ir_data %>%
   group_by(patient_type, wavenumber) %>%
   summarize(absorbance_avg = mean(absorbance, na.rm = TRUE), .groups = "drop")
+```
 
 Average healthy vs. CDI (Fig. 1B)
 
-{r}
+```{r fig-1B}
 #TOTAL PLOT (SNV + baseline correction plot (average))
 plot_bonds <- ggplot(corrected_ir_avg, aes(x = wavenumber, y = absorbance_avg, colour = patient_type)) + 
   geom_line(linewidth = 0.8) + 
@@ -409,10 +417,11 @@ plot_bonds <- ggplot(corrected_ir_avg, aes(x = wavenumber, y = absorbance_avg, c
 plot_bonds
 
 #ggsave("Figures_paper/Fig1B.Spectra_regions.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 Savitzky-Golay (Supp. Fig. S1)
 
-{r}
+```{r supp-fig-s1}
 #HEALTHY DONORS
 #Add tag to indicate the patient type 
 skg_data_hd <- skg_data_hd %>% mutate(patient_type = "healthy_donor")
@@ -458,6 +467,7 @@ annotate("text", x = 2900, y = 0.008, label = "atop(CH[2], CH[3])", parse = TRUE
 skg_avg_plot
 
 #ggsave("Figures_paper/SupFigS1.Savitsky-Golay.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 PCA - PRINCIPAL COMPONENT ANALYSIS
 
@@ -473,7 +483,7 @@ quali.sup = column of qualitative data (for example patient type, in this case i
 
 PCA - Selected regions (Fig. 1A)
 
-{r}
+```{r fig-1A}
 #Merge data from Savitzky-Golay (2nd derivate)
 #For the PCA analysis we need a single dataframe with n rows (individuals) and p columns (numeric variables)
 ir_skg_total <- rbind(ir_healthy_skg, ir_cdiff_sgk) %>%
@@ -529,6 +539,7 @@ pca_sgk_regions_plot <- fviz_pca_ind(pca_skg_regions,
 pca_sgk_regions_plot
 
 #ggsave("Figures_paper/Fig1A.PCA_regions.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 Scree plot Savitsky-Golay
 
@@ -538,7 +549,7 @@ Eigenvalues: Correspond to the amount of the variation explained by each princip
 
 A PC with an eigenvalue > 1 indicates that the PC accounts for more variance than accounted by one of the original variables in standardized data. This is commonly used as a cutoff point to determine the number of PCs to retain.
 
-{r}
+```{r scree-plot}
 #Extract the eigenvalues
 eigenvalues <- pca_skg_regions$eig
 head(eigenvalues[, 1:2])
@@ -579,6 +590,7 @@ scree_plot_signif <- ggplot(signif_eigenvalues, aes(x = principal_component, y =
   theme_minimal()
 
 scree_plot_signif
+```
 
 Contribution of variables (Supp Fig. S3)
 
@@ -586,7 +598,7 @@ The function fviz_contrib() creates a barplot of row/column contributions. A ref
 
 For a given dimension, any row/column with a contribution above the reference line could be considered as important in contributing to the dimension.
 
-{r}
+```{r supp-fig-s3}
 #VARIABLE CONTRIBUTIONS
 #Get the contribution of each variable to PC1 and PC2
 var_contrib_reg <-as.data.frame(pca_skg_regions$var$contrib)  #Contributions of variables
@@ -630,10 +642,11 @@ top_variables_PC2 <- fviz_contrib(pca_skg_regions, choice = "var", axes = 2, top
   theme(axis.title.x = element_blank(), axis.text.x = element_text(angle=45)) 
 
 top_variables_PC2
+```
 
 Mahalanobis distance - Decision rule for dysbiosis screening
 
-{r}
+```{r mahalanobis-distance}
 #MAHALANOBIS DISTANCE - DECISION RULE FOR DYSBIOSIS SCREENING
 #1. Select PCs to use
 #Kaiser criterion (eigenvalue > 1), capped at ncp stored in the PCA object.
@@ -666,10 +679,11 @@ mahal_df <- data.frame(
   mahal_distance = mahal_distances,
   patient_type   = patient_type,
   is_dysbiotic   = ifelse(patient_type == "Dysbiotic patients", 1, 0))
+```
 
 ROC analysis (Supp. Fig S8)
 
-{r}
+```{r supp-fig-s8}
 #3. ROC analysis to find the optimal distance threshold 
 # direction = "<": lower distance → healthier → negative class
 roc_obj <- roc(mahal_df$is_dysbiotic, mahal_df$mahal_distance,
@@ -726,10 +740,11 @@ roc_plot <- ggroc(roc_obj, colour = "steelblue4", linewidth = 1) +
 roc_plot
 
 #ggsave("Figures_paper/SupFigS8.ROC_Mahalanobis.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 PC scatter plot predicted class (Supp. Fig S9)
 
-{r}
+```{r supp-fig-s9}
 #6. PC scatter plot coloured by predicted class
 plot_df <- data.frame(
   PC1         = pca_scores[, 1],
@@ -776,10 +791,11 @@ decision_plot <- ggplot(plot_df,
 decision_plot
 
 #ggsave("Figures_paper/SupFigS9.Decision_plot.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 Spearman's correlation: MD vs SCFAs
 
-{r}
+```{r spearman-corr}
 #SCFA + FT-IR MAHALANOBIS DISTANCE SCORES
 scfa_total <- rbind(scfa_hd, scfa_cdiff)
 scfa_total <- scfa_total %>% remove_rownames %>% column_to_rownames(var='sample_id')
@@ -798,12 +814,13 @@ cat("\n--- Spearman correlations ---\n")
 cat("Acetate vs MD:     rho =", cor_acetate$estimate,    "p =", cor_acetate$p.value, "\n")
 cat("Propionate vs MD:  rho =", cor_propionate$estimate, "p =", cor_propionate$p.value, "\n")
 cat("Butyrate vs MD:    rho =", cor_butyrate$estimate,   "p =", cor_butyrate$p.value, "\n")
+```
 
 Scatter plots - SCFAs vs Mahalanobis
 
 ACETATE (Supp. Fig S10A)
 
-{r}
+```{r supp-fig-s10a}
 #SCFA vs Mahalanobis (df = mahal_scfa) - ACETATE
 #Scatter plot - ACETATE
 scatter_plot_acetate <- ggplot(mahal_scfa, aes(x = mahal_distance, y = acetate)) + 
@@ -817,10 +834,11 @@ scatter_plot_acetate <- ggplot(mahal_scfa, aes(x = mahal_distance, y = acetate))
 scatter_plot_acetate
 
 #ggsave("Figures_paper/SupFigS10A.Scatter_acetate.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 PROPIONATE (Supp. Fig S10B)
 
-{r}
+```{r supp-fig-s10b}
 #SCFA vs Mahalanobis (df = mahal_scfa) - PROPIONATE
 #Scatter plot - PROPIONATE
 scatter_plot_propionate <- ggplot(mahal_scfa, aes(x = mahal_distance, y = propionate)) + 
@@ -834,10 +852,11 @@ scatter_plot_propionate <- ggplot(mahal_scfa, aes(x = mahal_distance, y = propio
 scatter_plot_propionate
 
 #ggsave("Figures_paper/SupFigS10B.Scatter_propionate.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 BUTYRATE (Supp. Fig S10C)
 
-{r}
+```{r supp-fig-s10c}
 #SCFA vs Mahalanobis (df = mahal_scfa) - BUTYRATE
 #Scatter plot - BUTYRATE
 scatter_plot_butyrate <- ggplot(mahal_scfa, aes(x = mahal_distance, y = butyrate)) + 
@@ -851,6 +870,7 @@ scatter_plot_butyrate <- ggplot(mahal_scfa, aes(x = mahal_distance, y = butyrate
 scatter_plot_butyrate
 
 #ggsave("Figures_paper/SupFigS10C.Scatter_butyrate.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 LDA nested LOOCV + Bootstrap confidence intervals
 
@@ -862,7 +882,7 @@ Bootstrap CI (B=1000): each re-sample runs the full PCA+LDA pipeline on the boot
 
 Equal priors (0.5/0.5) throughout to correct for 25/75 class imbalance.
 
-{r}
+```{r lda-nested-loocv}
 #LDA - NESTED LOOCV + BOOTSTRAP CI
 
 #Input: raw spectral matrix (no patient_type column) + labels
@@ -872,8 +892,7 @@ patient_type  <- ir_filtered$patient_type
 group_factor  <- factor(patient_type)
 n_samples     <- nrow(spectral_data)
 
-cat("Class distribution:
-")
+cat("Class distribution:\n")
 print(table(group_factor))
 
 #Helper: given train/test spectral matrices + labels, fit PCA+LDA and return
@@ -899,9 +918,7 @@ run_pca_lda <- function(train_X, test_X, train_y, npc) {
 #capped at ncp=5 stored in the existing pca_skg_regions object.
 #Inside each fold prcomp retains all components; we slice to npc.
 npc <- min(sum(pca_skg_regions$eig[, 1] > 1), 5)
-cat(sprintf("
-PCs used in nested CV: %d
-", npc))
+cat(sprintf("\nPCs used in nested CV: %d\n", npc))
 
 #1. NESTED LOOCV
 loocv_probs  <- numeric(n_samples)
@@ -934,41 +951,29 @@ mcc_num <- (tp * tn) - (fp * fn)
 mcc_den <- sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
 mcc_obs <- ifelse(mcc_den == 0, 0, mcc_num / mcc_den)
 
-cat("
-=== NESTED LOOCV PERFORMANCE (no data leakage) ===
-")
-cat(sprintf("AUROC             : %.3f
-",  as.numeric(auc(roc_loocv))))
-cat(sprintf("Sensitivity       : %.1f%%
-", cm_loocv$byClass["Sensitivity"]       * 100))
-cat(sprintf("Specificity       : %.1f%%
-", cm_loocv$byClass["Specificity"]       * 100))
-cat(sprintf("Balanced Accuracy : %.1f%%
-", cm_loocv$byClass["Balanced Accuracy"] * 100))
-cat(sprintf("MCC               : %.3f
-",  mcc_obs))
-cat("
-Confusion matrix:
-")
+cat("\n=== NESTED LOOCV PERFORMANCE (no data leakage) ===\n")
+cat(sprintf("AUROC             : %.3f\n",  as.numeric(auc(roc_loocv))))
+cat(sprintf("Sensitivity       : %.1f%%\n", cm_loocv$byClass["Sensitivity"]       * 100))
+cat(sprintf("Specificity       : %.1f%%\n", cm_loocv$byClass["Specificity"]       * 100))
+cat(sprintf("Balanced Accuracy : %.1f%%\n", cm_loocv$byClass["Balanced Accuracy"] * 100))
+cat(sprintf("MCC               : %.3f\n",  mcc_obs))
+cat("\nConfusion matrix:\n")
 print(cm_loocv$table)
+```
 
 ROC plot - Nested LOOCV (Supp. Fig S11)
 
-{r}
+```{r supp-fig-s11}
 #ROC plot — nested LOOCV
 roc_nested_plot <- ggroc(roc_loocv, colour = "steelblue4", linewidth = 1) +
   geom_abline(intercept = 1, slope = 1,
               linetype = "dashed", colour = "grey40", linewidth = 0.4) +
   annotate("text", x = 0.24, y = 0.24,
            label = paste0("AUC = ",            round(auc(roc_loocv), 3),
-                          "
-Sens = ",         round(cm_loocv$byClass["Sensitivity"],       3),
-                          "
-Spec = ",         round(cm_loocv$byClass["Specificity"],       3),
-                          "
-Bal. Acc = ",     round(cm_loocv$byClass["Balanced Accuracy"], 3),
-                          "
-MCC = ",          round(mcc_obs, 3)),
+                          "\nSens = ",         round(cm_loocv$byClass["Sensitivity"],       3),
+                          "\nSpec = ",         round(cm_loocv$byClass["Specificity"],       3),
+                          "\nBal. Acc = ",     round(cm_loocv$byClass["Balanced Accuracy"], 3),
+                          "\nMCC = ",          round(mcc_obs, 3)),
            size = 4, colour = "black", hjust = 0) +
   labs(title = "ROC Curve - LDA (Nested LOOCV, no leakage)",
        x = "1 - Specificity", y = "Sensitivity") +
@@ -977,10 +982,11 @@ MCC = ",          round(mcc_obs, 3)),
 roc_nested_plot
 
 #ggsave("Figures_paper/SupFigS11.ROC_LOOCV-LDA.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 Bootstrap (Supp. Fig. S12 and S13)
 
-{r}
+```{r supp-fig-s12-s13}
 #2. BOOTSTRAP CONFIDENCE INTERVALS (B = 1000)
 # Each bootstrap iteration:
 #   a) Sample N indices WITH replacement -> bootstrap sample
@@ -1059,24 +1065,17 @@ boot_mcc   <- boot_mcc[1:valid_boots]
 
 ci95 <- function(x) quantile(x, c(0.025, 0.975), na.rm = TRUE)
 
-cat(sprintf("
-=== BOOTSTRAP CONFIDENCE INTERVALS (B = %d valid resamples) ===
-",
+cat(sprintf("\n=== BOOTSTRAP CONFIDENCE INTERVALS (B = %d valid resamples) ===\n",
             valid_boots))
-cat(sprintf("AUROC             : %.3f  [%.3f - %.3f]
-",
+cat(sprintf("AUROC             : %.3f  [%.3f - %.3f]\n",
             median(boot_auc),  ci95(boot_auc)[1],  ci95(boot_auc)[2]))
-cat(sprintf("Sensitivity       : %.3f  [%.3f - %.3f]
-",
+cat(sprintf("Sensitivity       : %.3f  [%.3f - %.3f]\n",
             median(boot_sens), ci95(boot_sens)[1], ci95(boot_sens)[2]))
-cat(sprintf("Specificity       : %.3f  [%.3f - %.3f]
-",
+cat(sprintf("Specificity       : %.3f  [%.3f - %.3f]\n",
             median(boot_spec), ci95(boot_spec)[1], ci95(boot_spec)[2]))
-cat(sprintf("Balanced Accuracy : %.3f  [%.3f - %.3f]
-",
+cat(sprintf("Balanced Accuracy : %.3f  [%.3f - %.3f]\n",
             median(boot_bacc), ci95(boot_bacc)[1], ci95(boot_bacc)[2]))
-cat(sprintf("MCC               : %.3f  [%.3f - %.3f]
-",
+cat(sprintf("MCC               : %.3f  [%.3f - %.3f]\n",
             median(boot_mcc),  ci95(boot_mcc)[1],  ci95(boot_mcc)[2]))
 
 # Bootstrap distribution plots
@@ -1144,10 +1143,11 @@ boot_plot <- ggplot(boot_long_no_mcc, aes(x = value)) +
 boot_plot
 
 #ggsave("Figures_paper/SupFigS13.Distribution_boot_metrics.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 PCA - All regions (Supp. Fig. S2)
 
-{r}
+```{r supp-fig-s2}
 #Merge data from Savitzky-Golay (2nd derivate)
 #For the PCA analysis we need a single dataframe with n rows (individuals) and p columns (numeric variables)
 ir_skg_total <- rbind(ir_healthy_skg, ir_cdiff_sgk) %>%
@@ -1191,12 +1191,13 @@ pca_sgk_all_plot <- fviz_pca_ind(pca_skg,
 pca_sgk_all_plot
 
 #ggsave("Figures_paper/SupFigS2.PCA_all_regions.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 PCA - SCFAs levels
 
 SCFA levels + IR data:
 
-{r}
+```{r pca-scfas-levels}
 #SCFA + IR DATA
 scfa_total <- rbind(scfa_hd, scfa_cdiff)
 scfa_total <- scfa_total %>% remove_rownames %>% column_to_rownames(var='sample_id')
@@ -1210,12 +1211,13 @@ rownames(ftir_total) <- ftir_total$Row.names #Column "row.names" back to indeed 
 ftir_total <- ftir_total[, -1]  #Drop the Row.names column
 
 ftir_total <- ftir_total %>% dplyr::select(-patient_type) %>% dplyr::select(acetate, propionate, butyrate, everything())  #Places the SCFAs at the begining
+```
 
 ACETATE (Supp. Fig. S4A and B)
 
 PCA acetate (Supplementary Figure S4 A):
 
-{r}
+```{r supp-fig-s4a}
 #ACETATE
 #Quartiles acetate
 acetate_ftir <- ftir_total %>% #Select acetate
@@ -1268,10 +1270,11 @@ pca_sgk_acetate <- fviz_pca_ind(pca_acetate,
 pca_sgk_acetate
 
 #ggsave("Figures_paper/SupFigS4B.PCA_acetate.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 Boxplot acetate (Supplementary Figure S4 B):
 
-{r}
+```{r supp-fig-s4b}
 #ACETATE
 #First, we need to add the column according to acetate levels (high or low). To do so:
 #1. Move rownames to a "sample_id" variable in the two dataframes of interest
@@ -1311,12 +1314,13 @@ plot_acetate <- ggplot(acetate_data, aes(x = patient_type, y = acetate, fill = p
 plot_acetate
 
 #ggsave("Figures_paper/SupFigS4A.Boxplot_acetate.jpeg", width = 6, height = 6, units = "in", dpi = 600)
+```
 
 PROPIONATE (Supp. Fig. S4C and D)
 
 PCA propionate (Supplementary Figure S4 C):
 
-{r}
+```{r supp-fig-s4c}
 #PROPIONATE
 #Quartiles propionate
 propionate_ftir <- ftir_total %>% #Select propionate
@@ -1368,10 +1372,11 @@ pca_sgk_propionate <- fviz_pca_ind(pca_propionate,
 pca_sgk_propionate
 
 #ggsave("Figures_paper/SupFigS4D.PCA_propionate.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 Boxplot propionate (Supplementary Figure S4 D):
 
-{r}
+```{r supp-fig-s4c2}
 #PROPIONATE
 #First, we need to add the column according to propionate levels (high or low). To do so:
 #1. Move rownames to a "sample_id" variable in the two dataframes of interest
@@ -1411,12 +1416,12 @@ plot_propionate <- ggplot(propionate_data, aes(x = patient_type, y = propionate,
 plot_propionate
 
 #ggsave("Figures_paper/SupFigS4C.Boxplot_propionate.jpeg", width = 6, height = 6, units = "in", dpi = 600)
-
+```
 BUTYRATE (Fig. 2 A and B)
 
 PCA butyrate (Fig 2A)
 
-{r}
+```{r Fig2B.PCA_butyrate}
 #BUTYRATE
 #Quartiles butyrate
 butyrate_ftir <- ftir_total %>% #Select butyrate
@@ -1468,10 +1473,10 @@ pca_sgk_butyrate <- fviz_pca_ind(pca_butyrate,
 pca_sgk_butyrate
 
 #ggsave("Figures_paper/Fig2B.PCA_butyrate.jpeg", width = 6, height = 4, units = "in", dpi = 600)
-
+```
 Boxplot butyrate (Fig 2B)
 
-{r}
+```{r Fig2B.Boxplot_butyrate}
 #BUTYRATE
 #First, we need to add the column according to butyrate levels (high or low). To do so:
 #1. Move rownames to a "sample_id" variable in the two dataframes of interest
@@ -1511,10 +1516,10 @@ plot_butyrate <- ggplot(butyrate_data, aes(x = patient_type, y = butyrate, fill 
 plot_butyrate
 
 #ggsave("Figures_paper/Fig2A.Boxplot_butyrate.jpeg", width = 6, height = 6, units = "in", dpi = 600)
-
+```
 PCA - Non specific regions (Supp. Fig. S6)
 
-{r}
+```{r supp-fig-s6}
 #Selected columns non-specific ()
 which(colnames(ir_skg_total) == "504") #To check the column of the variable
 
@@ -1563,14 +1568,15 @@ pca_sgk_neg_reg_plot <- fviz_pca_ind(pca_skg_neg_reg,
 pca_sgk_neg_reg_plot
 
 #ggsave("Figures_paper/SupFigS6.PCA_non_specific_regions.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 OTHER SUPPLEMENTARY MATERIALS
 
 PCA mix samples (Supp. Fig. S5)
 
-{r}
+```{r supp-fig-s5}
 #Load FTIR data
-spc_list_mix <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Sample_mix/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
+spc_list_mix <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Sample_mix/"), data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
 
 #SPECTRA LIST --> Sample mix
 ir_names_mix <- names(spc_list_mix)
@@ -1666,12 +1672,13 @@ pca_mix_sgk <- fviz_pca_ind(pca_mix,
 pca_mix_sgk
 
 #ggsave("Figures_paper/SupFigS5.PCA_mixed_samples.jpeg", width = 6, height = 4, units = "in", dpi = 600)
+```
 
 Plot acidified H2O (Supp. Fig. S7)
 
-{r}
+```{r supp-fig-s7}
 #Load FTIR DATA
-spc_list_water <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Acidified_water/", data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
+spc_list_water <- read_opus(dsn = paste0(base_dir,"/OPUS_spectra_FTIR/Acidified_water/"), data_only = FALSE, parallel = FALSE, progress_bar = FALSE)
 
 #SPECTRA LIST --> Acidified water
 ir_names_water <- names(spc_list_water)
@@ -1739,10 +1746,10 @@ blsn_water_plot <- ggplot(bsln_data_water, aes(x = wavenumber, y = absorbance)) 
         axis.title.x = element_text(vjust = +1, size = 11.5), 
         axis.ticks.x=element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "bottom", 
+        legend.position = "bottom",
         legend.text=element_text(size = 9.5))
   
 blsn_water_plot
 
 #ggsave("Figures_paper/SupFigS7.Spectra_water.jpeg", width = 6, height = 4, units = "in", dpi = 600)
-
+```
