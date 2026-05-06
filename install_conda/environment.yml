@@ -59,6 +59,7 @@ dependencies:
   - r-spatial
   - r-nnet
   - r-mass
+  - r-ggpmisc
 
   # System utilities (optional but useful)
   - git
